@@ -16,9 +16,9 @@ class Excel:
     
     def read_excel(self) -> DataFrame:
         try:
-            return pd.read_excel(self.file_path)
+            return pd.read_excel(self.file_path, engine='openpyxl')
         except FileNotFoundError as e:
             return pd.DataFrame(columns=self.columns)
     
     def write_file(self, new_file_path: str = None) -> None:
-        self.df.to_excel(new_file_path or self.file_path, index=False)
+        self.df.to_excel(new_file_path or self.file_path, index=False, engine='openpyxl')

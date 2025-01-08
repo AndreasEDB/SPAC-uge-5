@@ -25,4 +25,4 @@ class Config(Enum):
     FileLimit = 0
 
     # Other
-    DownloadTimeout = 0
+    DownloadTimeout = 3

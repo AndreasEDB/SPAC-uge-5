@@ -1,9 +1,7 @@
 import asyncio
-import aiohttp
 import os
-from typing import Hashable, List
+import gc
 import pandas as pd
-from pandas import Series
 from config import Config
 from downloader import Downloader
 from excel import Excel
@@ -13,11 +11,11 @@ meta_data = Excel(os.path.join(Config.BaseDir.value, Config.MetadataFile.value))
 gri = Excel(os.path.join(Config.BaseDir.value, Config.GRIFile.value))
 new_rows = []
 
-semaphore = asyncio.Semaphore(100)
+semaphore = asyncio.Semaphore(200)  # Adjust based on system capabilities
 
-async def download_row(i: Hashable, row: Series):
+async def download_row(i, row):
     async with semaphore:
-
+        print(f"Downloading {i}")
         new_row = {}
         downloaded = await downloader.download_row(row)
         for col in meta_data.df.columns:
@@ -30,22 +28,26 @@ async def download_row(i: Hashable, row: Series):
         new_rows.append(new_row)
         print(f"Downloaded {row[Config.IdCol.value]}.pdf: {downloaded}")
 
+
+def write_metadata():
+    new_rows.sort(key=lambda x: x[Config.IdCol.value])
+    for row in new_rows:
+        if row[Config.IdCol.value] in meta_data.df[Config.IdCol.value].values:
+            meta_data.df.loc[meta_data.df[Config.IdCol.value] == row[Config.IdCol.value]] = row
+        else:
+            meta_data.df = pd.concat([meta_data.df, pd.DataFrame([row])], ignore_index=True)
+    meta_data.write_file(os.path.join(Config.BaseDir.value, Config.OutputFile.value))
+    new_rows.clear()  # Clear new_rows after writing to file
+
 async def main():
-    batch_size = 1000
+    batch_size = 10
     rows = list(gri.df.iterrows())
     for i in range(0, len(rows), batch_size):
         batch = rows[i:i + batch_size]
         tasks = [download_row(i, row) for i, row in batch]
         await asyncio.gather(*tasks)
+        gc.collect()
+        # Write metadata file after each batch
+        write_metadata()
 
 asyncio.run(main())
-
-new_rows.sort(key=lambda x: x[Config.IdCol.value])
-
-for row in new_rows:
-    if row[Config.IdCol.value] in meta_data.df[Config.IdCol.value].values:
-        meta_data.df.loc[meta_data.df[Config.IdCol.value] == row[Config.IdCol.value]] = row
-    else:
-        meta_data.df = pd.concat([meta_data.df, pd.DataFrame([row])], ignore_index=True)
-
-meta_data.write_file(os.path.join(Config.BaseDir.value, Config.OutputFile.value))

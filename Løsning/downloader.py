@@ -23,7 +23,8 @@ class Downloader:
                     async with session.get(url, timeout=Config.DownloadTimeout.value) as res:
                         res.raise_for_status()
                         content = await res.read()
-                        return (res.status, content)
+                        if res.content_type == 'application/pdf':
+                            return (res.status, content)
                 except aiohttp.ClientError:
                     continue
             return (404, b'')
@@ -46,10 +47,11 @@ class Downloader:
                 if status == 200:
                     with open(file_path, 'wb') as pdf_out:
                         pdf_out.write(content)
-                    if self.validater.is_valid_pdf(file_path):
                         return True
-                    else:
-                        os.remove(file_path)
+                    # if self.validater.is_valid_pdf(file_path):
+                    #     return True
+                    # else:
+                    #     os.remove(file_path)
             except aiohttp.NonHttpUrlClientError as e:
                 pass
             except TypeError as e:

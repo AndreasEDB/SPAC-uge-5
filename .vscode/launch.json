@@ -1,13 +1,13 @@
 {
-    "configurations": [
-        {
-            "type": "debugpy",
-            "request": "launch",
-            "name": "Launch PDF Downloader",
-            "program": "${workspaceFolder}/pdf_downloader.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.env"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "debugpy",
+      "request": "launch",
+      "name": "Launch PDF Downloader",
+      "program": "${workspaceFolder}/Løsning/main.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/Løsning",
+      "envFile": "${workspaceFolder}/Løsning/.env"
+    }
+  ]
 }
