@@ -20,7 +20,8 @@ class Downloader:
         async with aiohttp.ClientSession() as session:
             for _ in range(3):
                 try:
-                    async with session.get(url, timeout=Config.DownloadTimeout.value) as res:
+                    timeout = aiohttp.ClientTimeout(total=Config.DownloadTimeout.value)
+                    async with session.get(url, timeout=timeout) as res:
                         res.raise_for_status()
                         content = await res.read()
                         if res.content_type == 'application/pdf':
